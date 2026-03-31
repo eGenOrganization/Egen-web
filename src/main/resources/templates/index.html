@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>eGen</title>
+    </head>
+    <body>
+        <div th:replace="~{fragments/header :: navbar('home')}"></div>
+
+        <h1 th:text="${welcomeMessage}"></h1>
+        <button id="c-script-btn" class="btn-primary" onclick="doAddScript()">C Script</button>
+        <input id="a-input">
+        <input id="b-input">
+    </body>
+    <script th:src="@{/js/c_executor.js}"></script>
+    <script>
+        function doAddScript() {
+                let valA = document.getElementById("a-input").value;
+                let valB = document.getElementById("b-input").value;
+                executeCScript('add', valA + "," + valB)
+                    .then(data => {
+                        alert(data);
+                    })
+                    .catch(error => {
+                        alert(`Error: ${error}`);
+                    });
+        }
+    </script>
+</html>

@@ -1,0 +1,57 @@
+/* Переменные для удобства */
+:root {
+    --bg-color: #ffffff;      /* Главный - белый */
+    --primary-color: #008b8b; /* Сине-зеленый (DarkCyan) */
+    --hover-color: #005f5f;
+    --text-color: #333333;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: Arial, sans-serif;
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+
+nav {
+    background-color: var(--primary-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-right: 15px;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+
+nav a:hover {
+    background-color: var(--hover-color);
+}
+
+/* Стиль для активной ссылки */
+nav a.active {
+    background-color: white;
+    color: var(--primary-color);
+}
+
+.btn-primary {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: var(--hover-color);
+}
