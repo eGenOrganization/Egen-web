@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eGen</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="images/Logo.svg" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header"> 
+       <div class="header__container"> 
+        <nav class ="header__nav"> 
+            <img src="images/Logo.svg" alt="">
+             <ul class="header__list"> 
+                <li class="header__list-item"><a class="header__list-link" href="#">Main</a></li>
+                <li class="header__list-item"><a class="header__list-link" href="#">Creator</a></li>
+             </ul>
+        </nav>
+       </div> 
+    </header>  
+   <main>
+    <div class="main__container"> 
+        <h1 class="main-title">eGen <span class="subtitle">codon analysis tool</span>
+        </h1>
+
+        <div class="cards-wrapper"> 
+        
+            <div class="left-column">
+            <div class="card card-input"> 
+                <label class="enter_DNA">Enter DNA sequence</label>
+                <textarea placeholder="ATGCGATACGTTAG.."></textarea>
+             </div> <div class="button-container"> 
+                    <button class="button button-analyze">Analyze</button>
+                    <button class="button button-upload">Upload file</button>
+            </div>
+            </div>
+
+            <div class="card card-output"> 
+                <div class="placeholder-content">
+                    <img src="images/Icon.svg" class="icon" alt="Icon">
+                    <p>Awaiting sequence</p>
+                </div>
+            </div>
+
+        </div> 
+    </div> 
+</main>
+<footer class="footer">
+  <div class="footer__container">
+
+    <div class="footer__logo">
+      <img src="images/Logo.svg" alt="eGen Logo">
+    </div>
+
+    <div class="footer__links">
+      <p>Email: themail@email.com</p>
+      <p>Phone: +380500000000</p>
+      <p>Address: Dnipro, Naukova 13</p>
+    </div>
+
+  </div>
+
+  <div class="footer__bottom">
+    <p>© 2026 eGen. All rights reserved.</p>
+  </div>
+</footer>
+</body>
+</html>
