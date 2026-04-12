@@ -8,13 +8,31 @@
     <body>
         <div th:replace="~{fragments/header :: navbar('home')}"></div>
 
-        <h1 th:text="${welcomeMessage}"></h1>
-        <button id="c-script-btn" class="btn-primary" onclick="doAddScript()">C Script</button>
-        <input id="a-input">
-        <input id="b-input">
+        <div style="display: flex; flex-direction: column; gap: 50px;">
+            <div>
+                <button id="c-script-btn" class="btn-primary" onclick="doAddScript()">C Script</button>
+                <input id="a-input">
+                <input id="b-input">
+            </div>
+
+            <div>
+                <button id="script-btn" class="btn-primary" onclick="aCalculator(getValue('message-input'))">Script</button>
+                <textarea id="message-input" name="message" rows="10" placeholder="Write here"
+                style="width: 100%; max-width: 100%"></textarea>
+            </div>
+        </div>
     </body>
     <script th:src="@{/js/c_executor.js}"></script>
+    <script type="module" th:src="@{/js/elements.js}"></script>
     <script>
+        function aCalculator(message){
+            let counter = 0;
+            for (let i = 0; i < message.length; i++) {
+                if (message[i] === 'a') counter++; 
+            }
+            alert(`There are ${counter} a`);
+        }
+
         function doAddScript() {
                 let valA = document.getElementById("a-input").value;
                 let valB = document.getElementById("b-input").value;
