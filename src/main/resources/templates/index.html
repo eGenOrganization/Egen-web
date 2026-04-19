@@ -7,42 +7,42 @@
     </head>
     <body>
         <div th:replace="~{fragments/header :: navbar('home')}"></div>
-
-        <div style="display: flex; flex-direction: column; gap: 50px;">
             <div>
-                <button id="c-script-btn" class="btn-primary" onclick="doAddScript()">C Script</button>
-                <input id="a-input">
-                <input id="b-input">
-            </div>
-
-            <div>
-                <button id="script-btn" class="btn-primary" onclick="aCalculator(getValue('message-input'))">Script</button>
+                <button id="script-btn" class="btn-primary" 
+                    onclick="processInputSequence('message-input', 'result-area')">
+                    Read Sequence
+                </button>
                 <textarea id="message-input" name="message" rows="10" placeholder="Write here"
                 style="width: 100%; max-width: 100%"></textarea>
             </div>
+
+            <div>
+                <input type="file" id="file-input" class="btn-primary">
+                <button class="btn-primary" onclick="processInputSequence('file-input', 'result-area')">
+                    Read File
+                </button>
+            </div>
+
+            <div class="col-container" style="padding-top: 50px">
+                <strong>Result</strong>
+                <textarea id="result-area" rows="6" cols="50" readonly></textarea>
+            </div>
         </div>
     </body>
-    <script th:src="@{/js/c_executor.js}"></script>
     <script type="module" th:src="@{/js/elements.js}"></script>
-    <script>
-        function aCalculator(message){
-            let counter = 0;
-            for (let i = 0; i < message.length; i++) {
-                if (message[i] === 'a') counter++; 
-            }
-            alert(`There are ${counter} a`);
+    <script type="module">
+        import { EgenInterface } from '/js/egen.js';
+        import { setValue, getValue } from '/js/elements.js';
+        const egenInterface = new EgenInterface();
+        await egenInterface.init();
+        
+        export async function processInputSequence(elementToRead, elementToWrite){
+            const content = await getValue(elementToRead, false);
+            console.log("Content received from getValue:", content);
+            const result = await egenInterface.processSequence(Array.isArray(content) ? content[0] : content);
+            setValue(elementToWrite, result);
         }
 
-        function doAddScript() {
-                let valA = document.getElementById("a-input").value;
-                let valB = document.getElementById("b-input").value;
-                executeCScript('add', valA + "," + valB)
-                    .then(data => {
-                        alert(data);
-                    })
-                    .catch(error => {
-                        alert(`Error: ${error}`);
-                    });
-        }
+        window.processInputSequence = processInputSequence;
     </script>
 </html>
