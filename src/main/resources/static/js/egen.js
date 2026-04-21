@@ -1,4 +1,4 @@
-import { WASI, Fd, File, OpenFile } from "https://cdn.jsdelivr.net/npm/@bjorn3/browser_wasi_shim@0.3.0/+esm";
+import { WASI, Fd, File, OpenFile } from "/js/wasi.js";
 
 export const DataFormat = {
     PLAIN_TEXT: 0
@@ -176,55 +176,40 @@ export class EgenStream {
     }
 }
 
-export class EgenInterface{
-    #egen;
+export class EgenInterface {
+    engine;
+
     async init(){
         const wasi = new WASI([], [], [
-            new Fd(0), // stdin
-            new Fd(1), // stdout
-            new Fd(2), // stderr
+            new Fd(0), new Fd(1), new Fd(2)
         ]);
         const importObject = {
             wasi_snapshot_preview1: wasi.wasiImport,
         };
-        const response = await fetch('../egen.wasm');
+        const response = await fetch('/egen.wasm');
         const { instance } = await WebAssembly.instantiateStreaming(response, importObject);
-
-        // Essential for Reactor model: call _initialize if it exists
         if (instance.exports._initialize) instance.exports._initialize();
-        // console.log("Available WASM exports:", Object.keys(instance.exports));
 
-        this.#egen = new LibEgen(instance);
+        this.engine = new LibEgen(instance);
     }
 
     async processSequence(input, format = DataFormat.PLAIN_TEXT) {
         if (input instanceof File || (input && input.constructor && input.constructor.name === 'File')) {
-            const stream = this.#egen.createStream(); 
-            
+            const stream = this.engine.createStream();
             try {
-                const readStream = input.stream().pipeThrough(new TextDecoderStream());
-                const reader = readStream.getReader();
-
+                const reader = input.stream().pipeThrough(new TextDecoderStream()).getReader();
                 while (true) {
-                    const { done, value } = await reader.read(); 
-                    console.log(value);
-                    if (value) {stream.process(value, format)};
+                    const { done, value } = await reader.read();
+                    if (value) stream.process(value, format);
                     if (done) break;
                 }
                 stream.end();
-                
-                const results = stream.getResults();
-                return this._streamToString(results);
-
-            } catch (error) {
-                console.error("Streaming error:", error);
-                throw error;
+                return stream.getResults();
             } finally {
                 stream.free();
             }
         } else {
-            const result = await this.#egen.processSequence(input, format);
-            return this._streamToString(result);
+            return this.engine.processSequence(input, format);
         }
     }
     
@@ -251,7 +236,6 @@ export class EgenInterface{
         const active = [];
         for (const [name, bitValue] of Object.entries(SequenceMode))
             if (bitValue !== 0 && (decimalValue & bitValue) === bitValue) active.push(name);
-        
         return active.length > 0 ? active : ["UNDEFINED"];
     }
 
@@ -265,5 +249,9 @@ export class EgenInterface{
             else anomalyDict.set(anomaly, 1);
         });
         return anomalyDict;
+    }
+
+    createStream() {
+        return this.engine.createStream();
     }
 }

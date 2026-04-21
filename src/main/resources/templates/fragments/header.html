@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-    <header th:fragment="navbar(activePage)">
-        <script th:src="@{/js/language.js}"></script>
-        <link rel="stylesheet" th:href="@{/css/style.css}">
-        <nav>
-            <a th:text="${mainPage}" th:href="@{/}" th:class="${activePage == 'home' ? 'active' : ''}"></a>
-            <a th:text="${secondPage}" th:href="@{/second-page}" th:class="${activePage == 'profile' ? 'active' : ''}"></a>
-            
-            <select id="langIds" onchange="changeLanguage(this.value)">
-                <option value="uk" th:selected="${#locale.language == 'uk' || #locale.language == 'ua'}">Українська</option>
-                <option value="en" th:selected="${#locale.language == 'en'}">English</option>
-            </select>
-        </nav>
-        <hr>
+<header class="navbar" th:fragment="navbar">
+        <img class="logo" alt="eGen logo" src="/img/logo.png">
+        <div class="nav-right">
+            <div class="lang-dropdown">
+                <button class="lang-btn">
+                    <svg class="icon-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+
+                    <span th:text="${#locale.language == 'uk' ? 'Ukrainian' : 'English'}">English</span>
+                    <span class="chevron">▼</span>
+                </button>
+
+                <div class="dropdown-content">
+                    <a th:href="@{/(lang='en')}">English</a>
+                    <a th:href="@{/(lang='uk')}">Ukrainian</a>
+                </div>
+            </div>
+
+            <nav class="links">
+                <a href="#" class="nav-link">Main</a>
+                <a href="#" class="nav-link">Creator</a>
+            </nav>
+        </div>
     </header>
 </html>

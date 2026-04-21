@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta charset="utf-8">
+
+    <title th:text="${title}"></title>
+    <meta name="description" content="eGen web platform to learn and analyse genomes">
+    <meta name="keywords" content="biology,codon analysis tool,genome,bioinformatics">
+    <meta name="author" content="eGen team">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <!--<link rel="icon" type="image/png" href="/img/logo.png">-->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+</html>

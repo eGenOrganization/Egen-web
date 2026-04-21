@@ -1,48 +1,197 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>eGen</title>
-    </head>
-    <body>
-        <div th:replace="~{fragments/header :: navbar('home')}"></div>
-            <div>
-                <button id="script-btn" class="btn-primary" 
-                    onclick="processInputSequence('message-input', 'result-area')">
-                    Read Sequence
-                </button>
-                <textarea id="message-input" name="message" rows="10" placeholder="Write here"
-                style="width: 100%; max-width: 100%"></textarea>
+<head th:replace="~{fragments/head::head('eGen - Main')}"></head>
+<body>
+<header th:replace="~{fragments/header::navbar}"></header>
+
+<main class="container">
+    <div class="content-wrapper">
+        <section class="left-col">
+            <h1 class="main-title"><strong>eGen</strong> <span class="thin">codon analysis tool</span></h1>
+
+            <div class="input-card">
+                <label>Enter DNA sequence</label>
+                <textarea id="dna-input" th:text="${sequence}" placeholder="ATGGCTTGA..."></textarea>
             </div>
 
-            <div>
-                <input type="file" id="file-input" class="btn-primary">
-                <button class="btn-primary" onclick="processInputSequence('file-input', 'result-area')">
-                    Read File
-                </button>
+            <div class="button-row">
+                <button id="btn-analyze" class="btn-blue">Analyze</button>
+                <button id="btn-upload-trigger" class="btn-blue">Upload file</button>
+                <input type="file" id="file-input" style="display: none;" />
+            </div>
+        </section>
+
+        <section class="right-col">
+            <div class="result-section">
+                <h3>Summary</h3>
+                <div class="summary-grid">
+                    <div class="grid-box">
+                        <label>Length</label>
+                        <span id="res-length" class="value">0</span>
+                    </div>
+                    <div class="grid-box">
+                        <label>Codons</label>
+                        <span id="res-codons" class="value">0</span>
+                    </div>
+                    <div class="grid-box">
+                        <label>Start codon</label>
+                        <span id="res-start" class="value">None</span>
+                    </div>
+                    <div class="grid-box">
+                        <label>Stop codon</label>
+                        <span id="res-stop" class="value">None</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="col-container" style="padding-top: 50px">
-                <strong>Result</strong>
-                <textarea id="result-area" rows="6" cols="50" readonly></textarea>
+            <div class="result-section">
+                <h3>RNA</h3>
+                <div id="res-rna" class="result-box">-</div>
             </div>
-        </div>
-    </body>
-    <script type="module" th:src="@{/js/elements.js}"></script>
-    <script type="module">
-        import { EgenInterface } from '/js/egen.js';
-        import { setValue, getValue } from '/js/elements.js';
-        const egenInterface = new EgenInterface();
-        await egenInterface.init();
-        
-        export async function processInputSequence(elementToRead, elementToWrite){
-            const content = await getValue(elementToRead, false);
-            console.log("Content received from getValue:", content);
-            const result = await egenInterface.processSequence(Array.isArray(content) ? content[0] : content);
-            setValue(elementToWrite, result);
+
+            <div class="result-section">
+                <h3>Known mutations</h3>
+                <div id="res-mutations" class="result-box mutation-box" style="flex-direction: column; align-items: stretch; max-height: 300px; overflow-y: auto;">
+                    <div id="anomaly-list-placeholder">
+                        <p><strong>None</strong></p>
+                        <small>No known mutation detected</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer::footer}"></footer>
+<script type="module">
+import { EgenInterface, AnomalyType } from "/js/egen.js";
+
+const egen = new EgenInterface();
+const UI = {
+    input: document.getElementById('dna-input'),
+    btnAnalyze: document.getElementById('btn-analyze'),
+    btnUploadTrigger: document.getElementById('btn-upload-trigger'),
+    fileInput: document.getElementById('file-input'),
+    resLength: document.getElementById('res-length'),
+    resCodons: document.getElementById('res-codons'),
+    resStart: document.getElementById('res-start'),
+    resStop: document.getElementById('res-stop'),
+    resRna: document.getElementById('res-rna'),
+    mutStatus: document.getElementById('mut-status'),
+    mutDetails: document.getElementById('mut-details'),
+    mutContainer: document.getElementById('res-mutations')
+};
+
+await egen.init();
+
+const anomalyDescriptions = {
+    [AnomalyType.INVALID_INPUT]: (a) => `Invalid character '${a.char}' at position ${a.position}`,
+    [AnomalyType.START]: (a) => `Start codon mutation`,
+    [AnomalyType.END]: (a) => `Stop codon missing at end of sequence`,
+    [AnomalyType.EARLY_AMBER]: (a) => `Early stop codon (Amber) at position ${a.position}`,
+    [AnomalyType.EARLY_UMBER]: (a) => `Early stop codon (Umber) at position ${a.position}`,
+    [AnomalyType.EARLY_OCHRE]: (a) => `Early stop codon (Ochre) at position ${a.position}`,
+    [AnomalyType.ALIGNMENT]: (a) => `Sequence alignment error`,
+    [AnomalyType.ABNORMAL_GAC]: (a) => `Abnormal GAC count (${a.count}) at position ${a.position}`
+};
+
+function updateUI(results) {
+    if (!results) return;
+
+    UI.resLength.innerText = results.nucleotidesCount || 0;
+    UI.resCodons.innerText = Math.floor((results.nucleotidesCount || 0) / 3);
+
+    UI.resStart.innerText = "OK";
+    UI.resStart.classList.remove('alert');
+    UI.resStop.innerText = "OK";
+    UI.resStop.classList.remove('alert');
+
+    UI.mutContainer.innerHTML = '';
+
+    if (results.anomalies && results.anomalies.length > 0) {
+        results.anomalies.forEach(a => {
+            if (a.type === AnomalyType.START) {
+                UI.resStart.innerText = "Mutation";
+                UI.resStart.classList.add('alert');
+            }
+            if (a.type === AnomalyType.END) {
+                UI.resStop.innerText = "Missing";
+                UI.resStop.classList.add('alert');
+            }
+
+            const item = document.createElement('div');
+            item.style.borderBottom = "1px solid #eee";
+            item.style.padding = "8px 0";
+
+            const typeKey = Object.keys(AnomalyType).find(key => AnomalyType[key] === a.type);
+            const desc = anomalyDescriptions[a.type] ? anomalyDescriptions[a.type](a) : `Unknown anomaly (${typeKey})`;
+
+            item.innerHTML = `
+                <p style="margin:0; font-weight:bold;">${typeKey}</p>
+                <small style="color: #666;">${desc}</small>
+            `;
+            UI.mutContainer.appendChild(item);
+        });
+    } else {
+        UI.mutContainer.innerHTML = `
+            <p><strong>None</strong></p>
+            <small>No known mutation detected</small>
+        `;
+    }
+
+    UI.resRna.innerText = results.mode === 64 ? "Sequence is RNA" : "DNA sequence processed";
+}
+
+UI.btnAnalyze.addEventListener('click', async () => {
+    const text = UI.input.value;
+    if (!text) return;
+    const results = await egen.processSequence(text);
+    updateUI(results);
+});
+
+UI.btnUploadTrigger.addEventListener('click', () => UI.fileInput.click());
+
+UI.fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const stream = egen.createStream();
+    const reader = file.stream().getReader();
+    const decoder = new TextDecoder();
+
+    // 32MB Buffer logic
+    const CHUNK_LIMIT = 32 * 1024 * 1024;
+    let currentBuffer = new Uint8Array(0);
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+
+            if (value) {
+                // Accumulate bytes
+                let newBuffer = new Uint8Array(currentBuffer.length + value.length);
+                newBuffer.set(currentBuffer);
+                newBuffer.set(value, currentBuffer.length);
+                currentBuffer = newBuffer;
+            }
+
+            // Process if we hit 32MB or if the file is finished
+            if (currentBuffer.length >= CHUNK_LIMIT || (done && currentBuffer.length > 0)) {
+                stream.process(decoder.decode(currentBuffer));
+                currentBuffer = new Uint8Array(0); // Clear buffer
+            }
+
+            if (done) break;
         }
 
-        window.processInputSequence = processInputSequence;
-    </script>
+        stream.end();
+        updateUI(stream.getResults());
+    } catch (err) {
+        console.error("Streaming error:", err);
+    } finally {
+        stream.free();
+    }
+});
+</script>
+</body>
 </html>
