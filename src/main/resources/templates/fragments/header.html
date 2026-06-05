@@ -22,8 +22,8 @@
             </div>
 
             <nav class="links">
-                <a href="#" class="nav-link">Main</a>
-                <a href="#" class="nav-link">Creator</a>
+                <a th:text="${main}" th:href="@{/}" class="nav-link">Main</a>
+                <a th:text="${creator}" th:href="@{/creator}" class="nav-link">Creator</a>
             </nav>
         </div>
     </header>

@@ -43,6 +43,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	
+	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("net.java.dev.jna:jna:5.14.0")
     implementation("net.java.dev.jna:jna-platform:5.14.0")
 	implementation("org.apache.poi:poi:5.5.1")

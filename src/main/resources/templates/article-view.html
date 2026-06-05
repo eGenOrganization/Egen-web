@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head::head('eGen - Article')}">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .meta { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        .alert { background: #fff3cd; padding: 10px; border-left: 5px solid #ffc107; margin-bottom: 20px; }
+        .premium-badge { background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; }
+        img { max-width: 100%; height: auto; display: block; margin: 20px 0; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header::navbar}"></header>
+
+<main>
+    <!-- 1. Выводим обычный заголовок -->
+    <h1 th:text="${article.title}">Заголовок по умолчанию</h1>
+
+    <!-- 2. Проверяем условие из Java и выводим плашку премиума -->
+    <div class="meta">
+        Автор: <span th:text="${article.authorName}">Автор</span> 
+        <span th:if="${isPremiumUser}" class="premium-badge">PRO Читатель</span>
+        <br>
+        Опубликовано: <span th:text="${formattedDate}">01.01.2026</span>
+    </div>
+
+    <!-- 3. Вставляем динамическое уведомление, сгенерированное в Java контроллере -->
+    <div th:utext="${systemNotice}"></div>
+
+    <hr>
+
+    <!-- 4. ГЛАВНОЕ: Рендерим HTML контент статьи (со всеми стилями и картинками из MongoDB) -->
+    <article th:utext="${article.content}">
+        Здесь будет основной текст статьи со стилями из базы данных...
+    </article>
+</main>
+
+</body>
+</html>
