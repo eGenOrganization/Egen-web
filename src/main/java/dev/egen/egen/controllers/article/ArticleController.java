@@ -9,7 +9,6 @@ import java.time.format.DateTimeFormatter;
 
 @Controller
 public class ArticleController {
-
     @Autowired
     private ArticleRepository articleRepository;
 
@@ -30,7 +29,7 @@ public class ArticleController {
     private String getView(Article article, Model model){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm");
         String formattedDate = article.getCreatedAt().format(formatter);
-        
+
         model.addAttribute("article", article);
         model.addAttribute("formattedDate", formattedDate);
         return "article-view";

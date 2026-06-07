@@ -6,13 +6,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import dev.egen.egen.controllers.article.ArticleController;
 import java.util.Locale;
 
 @Controller
-
 public class PageController {
-    @Autowired
-    private MessageSource messageSource;
+    @Autowired private MessageSource messageSource;
+    @Autowired private ArticleController articleController;
 
     private void setContnentToElement(Model model, Locale locale, String elementName){
         model.addAttribute(elementName, messageSource.getMessage(elementName, null, locale));
@@ -30,7 +30,12 @@ public class PageController {
     }
 
     @GetMapping("/creator")
-    public String creatorPage(Model model) {
+    public String creatorPage(Model model, Locale locale) {
         return "creator";
+    }
+
+    @GetMapping("/article")
+    public String articlePage(Model model, String title, Locale locale) {
+        return articleController.getArticlePageByTitle(title, model);
     }
 }

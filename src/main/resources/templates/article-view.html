@@ -13,26 +13,16 @@
 <header th:replace="~{fragments/header::navbar}"></header>
 
 <main>
-    <!-- 1. Выводим обычный заголовок -->
-    <h1 th:text="${article.title}">Заголовок по умолчанию</h1>
-
-    <!-- 2. Проверяем условие из Java и выводим плашку премиума -->
+    <h1 th:text="${article.title}">Default Title</h1>
     <div class="meta">
-        Автор: <span th:text="${article.authorName}">Автор</span> 
-        <span th:if="${isPremiumUser}" class="premium-badge">PRO Читатель</span>
+        Author: <span th:text="${article.authorName}">Author</span>
+        <span th:if="${isPremiumUser}" class="premium-badge">PRO Reader</span>
         <br>
-        Опубликовано: <span th:text="${formattedDate}">01.01.2026</span>
+        Published: <span th:text="${formattedDate}">01.01.2026</span>
     </div>
-
-    <!-- 3. Вставляем динамическое уведомление, сгенерированное в Java контроллере -->
     <div th:utext="${systemNotice}"></div>
-
     <hr>
-
-    <!-- 4. ГЛАВНОЕ: Рендерим HTML контент статьи (со всеми стилями и картинками из MongoDB) -->
-    <article th:utext="${article.content}">
-        Здесь будет основной текст статьи со стилями из базы данных...
-    </article>
+    <article th:utext="${article.content}">The main text of the article with styles from the database goes here...</article>
 </main>
 
 </body>

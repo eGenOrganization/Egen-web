@@ -60,11 +60,11 @@
             </div>
         </section>
     </div>
-
     <div th:replace="~{fragments/article-manager}"></div>
 </main>
 
 <footer th:replace="~{fragments/footer::footer}"></footer>
+<script type="module" th:src="@{/js/elements.js}"></script>
 <script type="module">
 import { EgenInterface, AnomalyType } from "/js/egen.js";
 
