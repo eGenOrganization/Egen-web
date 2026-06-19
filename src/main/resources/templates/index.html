@@ -66,9 +66,9 @@
 <footer th:replace="~{fragments/footer::footer}"></footer>
 <script type="module" th:src="@{/js/elements.js}"></script>
 <script type="module">
-import { EgenInterface, AnomalyType } from "/js/egen.js";
 
-const egen = new EgenInterface();
+import init, { analyze } from "/js/libegen.js";
+await init();
 const UI = {
     input: document.getElementById('dna-input'),
     btnAnalyze: document.getElementById('btn-analyze'),
@@ -84,17 +84,15 @@ const UI = {
     mutContainer: document.getElementById('res-mutations')
 };
 
-await egen.init();
-
 const anomalyDescriptions = {
-    [AnomalyType.INVALID_INPUT]: (a) => `Invalid character '${a.char}' at position ${a.position}`,
-    [AnomalyType.START]: (a) => `Start codon mutation`,
-    [AnomalyType.END]: (a) => `Stop codon missing at end of sequence`,
-    [AnomalyType.EARLY_AMBER]: (a) => `Early stop codon (Amber) at position ${a.position}`,
-    [AnomalyType.EARLY_UMBER]: (a) => `Early stop codon (Umber) at position ${a.position}`,
-    [AnomalyType.EARLY_OCHRE]: (a) => `Early stop codon (Ochre) at position ${a.position}`,
-    [AnomalyType.ALIGNMENT]: (a) => `Sequence alignment error`,
-    [AnomalyType.ABNORMAL_GAC]: (a) => `Abnormal GAC count (${a.count}) at position ${a.position}`
+    ["InvalidInput"]: (a) => `Invalid character '${a.codon}' at position ${a.position}`,
+    ["InproperStart"]: (a) => `Start codon mutation`,
+    ["InproperEnd"]: (a) => `Stop codon missing at end of sequence`,
+    ["EarlyAmber"]: (a) => `Early stop codon (Amber) at position ${a.position}`,
+    ["EarlyUmber"]: (a) => `Early stop codon (Umber) at position ${a.position}`,
+    ["EarlyOchre"]: (a) => `Early stop codon (Ochre) at position ${a.position}`,
+    ["InvalidAlignment"]: (a) => `Sequence alignment error`,
+    ["LowEntropy"]: (a) => `Abnormal GAC count (${a.count}) at position ${a.position}`
 };
 
 function updateUI(results) {
@@ -112,11 +110,24 @@ function updateUI(results) {
 
     if (results.anomalies && results.anomalies.length > 0) {
         results.anomalies.forEach(a => {
-            if (a.type === AnomalyType.START) {
+            let anomalyType;
+            let anomalyData = {};
+
+            if (typeof a === "string") {
+                anomalyType = a;
+                anomalyData = {}; 
+            } else if (typeof a === "object" && a !== null) {
+                anomalyType = Object.keys(a)[0];
+                if (typeof a[anomalyType] === "object" && a[anomalyType] !== null)
+                    anomalyData = a[anomalyType];
+                else anomalyData = { position: a[anomalyType] };
+            }
+
+            if (anomalyType === "InproperStart") {
                 UI.resStart.innerText = "Mutation";
                 UI.resStart.classList.add('alert');
             }
-            if (a.type === AnomalyType.END) {
+            if (anomalyType === "InproperEnd") {
                 UI.resStop.innerText = "Missing";
                 UI.resStop.classList.add('alert');
             }
@@ -125,29 +136,21 @@ function updateUI(results) {
             item.style.borderBottom = "1px solid #eee";
             item.style.padding = "8px 0";
 
-            const typeKey = Object.keys(AnomalyType).find(key => AnomalyType[key] === a.type);
-            const desc = anomalyDescriptions[a.type] ? anomalyDescriptions[a.type](a) : `Unknown anomaly (${typeKey})`;
+            const descFn = anomalyDescriptions[anomalyType];
+            const textDescription = typeof descFn === "function" ? descFn(anomalyData) : `Unknown anomaly (${anomalyType})`;
 
-            item.innerHTML = `
-                <p style="margin:0; font-weight:bold;">${typeKey}</p>
-                <small style="color: #666;">${desc}</small>
-            `;
+            item.innerHTML = `<p style="margin:0; font-weight:bold;">${anomalyType}</p>
+                <small style="color: #666;">${textDescription}</small>`;
             UI.mutContainer.appendChild(item);
         });
-    } else {
-        UI.mutContainer.innerHTML = `
-            <p><strong>None</strong></p>
-            <small>No known mutation detected</small>
-        `;
     }
-
     UI.resRna.innerText = results.mode === 64 ? "Sequence is RNA" : "DNA sequence processed";
 }
 
 UI.btnAnalyze.addEventListener('click', async () => {
     const text = UI.input.value;
     if (!text) return;
-    const results = await egen.processSequence(text);
+    const results = analyze(text);
     updateUI(results);
 });
 
@@ -157,41 +160,51 @@ UI.fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const stream = egen.createStream();
     const reader = file.stream().getReader();
     const decoder = new TextDecoder();
-
-    // 32MB Buffer logic
-    const CHUNK_LIMIT = 32 * 1024 * 1024;
+    const totalResults = {nucleotidesCount: 0,mode: 0,anomalies: []};
+    const CHUNK_LIMIT = 30 * 1024 * 1024; 
     let currentBuffer = new Uint8Array(0);
+    let globalPosition = 0;
 
     try {
         while (true) {
             const { done, value } = await reader.read();
-
             if (value) {
-                // Accumulate bytes
                 let newBuffer = new Uint8Array(currentBuffer.length + value.length);
                 newBuffer.set(currentBuffer);
                 newBuffer.set(value, currentBuffer.length);
                 currentBuffer = newBuffer;
             }
-
-            // Process if we hit 32MB or if the file is finished
             if (currentBuffer.length >= CHUNK_LIMIT || (done && currentBuffer.length > 0)) {
-                stream.process(decoder.decode(currentBuffer));
-                currentBuffer = new Uint8Array(0); // Clear buffer
-            }
+                const textChunk = decoder.decode(currentBuffer, { stream: !done });
+                const chunkResult = analyze(textChunk);
 
+                totalResults.nucleotidesCount += (chunkResult.nucleotidesCount || 0);
+                if (chunkResult.mode) totalResults.mode = chunkResult.mode;
+                if (chunkResult.anomalies && chunkResult.anomalies.length > 0) {
+                    chunkResult.anomalies.forEach(a => {
+                        if (typeof a === "object" && a !== null) {
+                            const type = Object.keys(a)[0];
+                            const data = a[type];
+                            if (typeof data === "object" && data !== null && data.position !== undefined) 
+                                data.position += globalPosition;
+                            else if (typeof data === "number")
+                                a[type] = data + globalPosition;
+                        }
+                        totalResults.anomalies.push(a);
+                    });
+                }
+                
+                globalPosition += textChunk.length;
+                currentBuffer = new Uint8Array(0);
+            }
             if (done) break;
         }
+        updateUI(totalResults);
 
-        stream.end();
-        updateUI(stream.getResults());
     } catch (err) {
-        console.error("Streaming error:", err);
-    } finally {
-        stream.free();
+        console.error("Ошибка при поблочном анализе файла:", err);
     }
 });
 </script>
