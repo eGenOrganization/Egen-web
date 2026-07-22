@@ -12,15 +12,15 @@ public class ArticleController {
     @Autowired
     private ArticleRepository articleRepository;
 
-    @GetMapping("/article/{id}")
-    public String getArticlePageById(@PathVariable String id, Model model) {
+    @GetMapping("/article/id/{id}")
+    public String getArticlePageById(@PathVariable("id") String id, Model model) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Article is not found: " + id));
         return getView(article, model);
     }
 
-    @GetMapping("/article/{title}")
-    public String getArticlePageByTitle(@PathVariable String title, Model model) {
+    @GetMapping("/article/title/{title}")
+    public String getArticlePageByTitle(@PathVariable("title") String title, Model model)  {
         Article article = articleRepository.findByTitle(title)
                 .orElseThrow(() -> new IllegalArgumentException("Article is not found: " + title));
         return getView(article, model);

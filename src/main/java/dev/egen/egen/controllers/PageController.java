@@ -35,7 +35,7 @@ public class PageController {
     }
 
     @GetMapping("/article")
-    public String articlePage(Model model, String title, Locale locale) {
-        return articleController.getArticlePageByTitle(title, model);
+    public String articlePage(Model model, String id, Locale locale) {
+        return articleController.getArticlePageById(id, model);
     }
 }

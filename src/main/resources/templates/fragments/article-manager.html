@@ -1,15 +1,15 @@
 <h1>Article manager (example)</h1>
 <div style="display: grid; gap: 1rem;">
-    <input type="text" id="article-name" style="width: 100%;" placeholder="Enter article name...">
+    <input type="text" id="article-id" style="width: 100%;" placeholder="Enter article id...">
     <button id="article-btn" th:data-url="@{/article}" onclick="openArticle()" class="btn-blue">Open article</button>
 </div>
 
 <script>
 function openArticle() {
-    const input = document.getElementById('article-name');
-    const titleValue = input ? input.value.trim() : '';
+    const input = document.getElementById('article-id');
+    const idValue = input ? input.value.trim() : '';
     const button = document.getElementById('article-btn');
     const baseUrl = button.getAttribute('data-url');
-    window.location.href = `${baseUrl}?title=${encodeURIComponent(titleValue)}`;
+    window.location.href = `${baseUrl}?id=${encodeURIComponent(idValue)}`;
 }
 </script>
